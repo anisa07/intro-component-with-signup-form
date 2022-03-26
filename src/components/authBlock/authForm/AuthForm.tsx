@@ -1,68 +1,98 @@
 import {StyledAuthForm, StyledTACLink, StyledTACText} from "./authStyles"
 import {AuthButton} from "../authButton/AuthButton";
-import {NameInput} from "../../formInput/NameInput";
-import {SyntheticEvent, useEffect, useState} from "react";
-import {PasswordInput} from "../../formInput/PasswordInput";
-import {EmailInput} from "../../formInput/EmailInput";
+import {SyntheticEvent, useState} from "react";
+import {FormInput} from "../../formInput/FormInput";
+import {emailRegex} from "../../../helpers/formHelper";
 
 export const AuthForm =() => {
-    const [firstName, setFirstName] = useState("");
-    const [firstNameError, setFirstNameError] = useState(false);
-    const [email, setEmail] = useState("");
-    const [emailError, setEmailError] = useState(false);
-    const [lastName, setLastName] = useState("");
-    const [lastNameError, setLastNameError] = useState(false);
-    const [password, setPassword] = useState("");
-    const [passwordError, setPasswordError] = useState(false);
-
-    useEffect(() => {
-
-    }, []);
-
+    const handleFormInputValidation = ((fi: any) => {
+        let error = fi.value.length === 0;
+        let errorMessage = error ? `${fi.placeholder} cannot be blank` : "";
+        if (!error && fi.type === 'email') {
+            error = !fi.value.toLowerCase().match(emailRegex);
+            errorMessage = error ? `${fi.placeholder} is not a valid email` : "";
+        }
+        return {
+            ...fi,
+            error,
+            errorMessage,
+        }
+    })
     const handleSubmit = (e: SyntheticEvent) => {
         e.preventDefault();
-        if (!firstName) {
-            setFirstNameError(true);
-        }
-        if (!lastName) {
-            setLastNameError(true);
-        }
-        if(!email) {
-            setEmailError(true);
-        }
-        if(!password) {
-            setPasswordError(true);
-        }
+        const updatedFormInputs = formInputs.map(fi => {
+            return handleFormInputValidation(fi);
+        })
+        setFormInputs(updatedFormInputs)
     }
+
+    const [formInputs, setFormInputs] = useState([
+        {
+            type:"text",
+            placeholder:"First Name",
+            error: false,
+            errorMessage: "",
+            value: '',
+        },
+        {
+            type:"text",
+            placeholder:"Last Name",
+            error: false,
+            errorMessage: "",
+            value: '',
+        },
+        {
+            type:"email",
+            placeholder:"Email Address",
+            value: '',
+            error: false,
+            errorMessage: "",
+        },
+        {
+            type:"password",
+            placeholder:"Password",
+            value: '',
+            error: false,
+            errorMessage: "",
+        },
+        {
+            type:"password",
+            placeholder:"Confirm Password",
+            value: '',
+            error: false,
+            errorMessage: "",
+        },
+    ]);
 
     return (
         <StyledAuthForm onSubmit={handleSubmit}>
-            <NameInput
-                name="First Name"
-                error={firstNameError}
-                value={firstName}
-                onChange={setFirstName}
-                onError={setFirstNameError}
-            />
-            <NameInput
-                name="Last Name"
-                error={lastNameError}
-                value={lastName}
-                onChange={setLastName}
-                onError={setLastNameError}
-            />
-            <EmailInput
-                error={emailError}
-                value={email}
-                onError={setEmailError}
-                onChange={setEmail}
-            />
-            <PasswordInput
-                error={passwordError}
-                value={password}
-                onChange={setPassword}
-                onError={setPasswordError}
-            />
+            {formInputs.map(formInput => (
+                <FormInput {...formInput}
+
+                    onChange={(value) => {
+                        const updatedFormInputs = formInputs.map(fi => {
+                            if (fi.placeholder === formInput.placeholder) {
+                                return {
+                                    ...fi,
+                                    value,
+                                }
+                            }
+                            return fi;
+                        })
+                        setFormInputs(updatedFormInputs)
+                    }}
+
+                    onBlur={() => {
+                        const updatedFormInputs = formInputs.map(fi => {
+                            if (fi.placeholder === formInput.placeholder) {
+                                return handleFormInputValidation(fi);
+                            }
+                            return fi;
+                        })
+                        setFormInputs(updatedFormInputs)
+                    }}
+                />
+            ))}
             <AuthButton />
             <StyledTACText>
                 By clicking the button, you are agreeing to our
